@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: invention-radar-sa
+  namespace: invention-radar
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: invention-radar-role
+  namespace: invention-radar
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: invention-radar-binding
+  namespace: invention-radar
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: invention-radar-role
+subjects:
+  - kind: ServiceAccount
+    name: invention-radar-sa
+    namespace: invention-radar

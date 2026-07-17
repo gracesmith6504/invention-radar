@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: invention-radar
+  namespace: invention-radar
+spec:
+  schedule: "0 17 * * 1-5"  # 5pm UTC, weekdays only
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          serviceAccountName: invention-radar-sa
+          restartPolicy: Never
+          containers:
+            - name: launcher
+              image: quay.io/grasmith/invention-radar-launcher:latest
+              command: ["/bin/bash", "/app/launcher.sh"]
+              env:
+                - name: AGENT_IMAGE
+                  value: "quay.io/grasmith/invention-radar:latest"
+                - name: RADAR_DOC_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: invention-radar-secrets
+                      key: RADAR_DOC_ID
+                - name: GOOGLE_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: invention-radar-secrets
+                      key: GOOGLE_CLIENT_ID
+                - name: GOOGLE_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: invention-radar-secrets
+                      key: GOOGLE_CLIENT_SECRET
+                - name: GOOGLE_REFRESH_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: invention-radar-secrets
+                      key: GOOGLE_REFRESH_TOKEN
+                - name: SLACK_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: invention-radar-secrets
+                      key: SLACK_WEBHOOK_URL
+                - name: OPENAI_BASE_URL
+                  value: "https://inference.local/v1"
+                - name: LLM_MODEL
+                  value: "google/gemini-2.5-flash"
+              volumeMounts:
+                - name: policy
+                  mountPath: /app/policy-template.yaml
+                  subPath: policy.yaml
+          volumes:
+            - name: policy
+              configMap:
+                name: invention-radar-policy

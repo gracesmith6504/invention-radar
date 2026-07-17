@@ -1,0 +1,23 @@
+{
+  "messages": [
+    {
+      "id": "19f6fb0f9ad8bcdc",
+      "threadId": "19f6fb0f9ad8bcdc",
+      "payload": {
+        "headers": [
+          {"name": "Subject", "value": "Notes: \"Grace / Ignas 1:1\" Jul 17, 2026"},
+          {"name": "From", "value": "Gemini <gemini-notes@google.com>"},
+          {"name": "Date", "value": "Thu, 17 Jul 2026 14:00:00 +0000"}
+        ],
+        "parts": [
+          {
+            "mimeType": "text/html",
+            "body": {
+              "data": "PHA+SGVyZSBhcmUgeW91ciBtZWV0aW5nIG5vdGVzLjwvcD48YSBocmVmPSJodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9kb2N1bWVudC9kLzFhYmMxMjNkZWYvZWRpdCI+VmlldyBub3RlczwvYT4="
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

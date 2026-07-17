@@ -1,0 +1,37 @@
+{
+  "ideas": [
+    {
+      "id": "2026-07-17-policy-aware-model-router",
+      "created": "2026-07-17",
+      "category": "work",
+      "title": "Policy-Aware Model Router",
+      "description": "Route LLM requests based on data sensitivity policies.",
+      "tags": ["agent-ops", "networking"],
+      "starting_point": "Simple proxy that reads a config file mapping data tags to models.",
+      "ambitious_version": "Full policy engine integrated with OpenShell network policies.",
+      "evidence": [
+        {
+          "meeting": "GenAI Networking Bi-Weekly",
+          "date": "2026-07-14",
+          "speaker": "Morgan Foster",
+          "quote": "We're spending way too much time figuring out which model to use.",
+          "doc_link": "https://docs.google.com/document/d/abc123/edit"
+        }
+      ],
+      "scores": {
+        "frustration_intensity": 8,
+        "nobody_owns_this": 9,
+        "cross_meeting": 10,
+        "repeat_frequency": 6,
+        "grace_fit": 8,
+        "demo_ability": 7
+      },
+      "overall_score": 8.0,
+      "status": null,
+      "starred": false,
+      "related_ideas": []
+    }
+  ],
+  "trends": {},
+  "people": {}
+}

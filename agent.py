@@ -24,6 +24,8 @@ def validate_config() -> list[str]:
         errors.append("GOOGLE_CLIENT_SECRET not set")
     if not config.GOOGLE_REFRESH_TOKEN:
         errors.append("GOOGLE_REFRESH_TOKEN not set")
+    if not config.LLM_API_KEY:
+        errors.append("LLM_API_KEY not set")
     return errors
 
 
@@ -35,7 +37,14 @@ def main():
 
     print(f"[{datetime.now(timezone.utc).isoformat()}] Invention Radar starting")
 
-    token = get_access_token()
+    try:
+        token = get_access_token()
+    except Exception:
+        state = load_state(config.STATE_FILE)
+        state = prune_old_entries(state)
+        save_state(state, config.STATE_FILE)
+        raise
+
     state = load_state(config.STATE_FILE)
     state = prune_old_entries(state)
     radar = load_radar(config.RADAR_FILE)

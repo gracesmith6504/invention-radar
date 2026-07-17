@@ -1,0 +1,40 @@
+{
+  "title": "Notes: Grace / Ignas 1:1 - Jul 17, 2026",
+  "body": {
+    "content": [
+      {
+        "paragraph": {
+          "elements": [
+            {
+              "textRun": {
+                "content": "Meeting Summary\n"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [
+            {
+              "textRun": {
+                "content": "Ignas mentioned that the OpenShell sandbox is getting more traction.\n"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [
+            {
+              "textRun": {
+                "content": "Grace asked about contributing upstream.\n"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

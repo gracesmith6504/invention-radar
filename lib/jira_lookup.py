@@ -1,4 +1,3 @@
-import os
 import requests
 import config
 
@@ -66,6 +65,10 @@ def lookup_existing_work(ideas: list[dict]) -> dict[str, dict]:
         title = idea.get("title", "")
         tags = idea.get("tags", [])
         try:
+            keywords = extract_keywords(title)
+            if not keywords:
+                results[title] = {"covered": False, "issue_count": 0, "issues": []}
+                continue
             jql = build_jql(title, tags)
             data = _jira_search(jql)
             issues = data.get("issues", [])[:5]

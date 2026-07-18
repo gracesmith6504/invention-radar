@@ -3,7 +3,7 @@ import os
 RADAR_DOC_ID = os.environ.get("RADAR_DOC_ID", "")
 SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
 
-GMAIL_QUERY = 'from:gemini-notes@google.com subject:"Notes:" newer_than:7d'
+GMAIL_QUERY = os.environ.get("GMAIL_QUERY_OVERRIDE", os.environ.get("GMAIL_QUERY", 'from:gemini-notes@google.com subject:"Notes:" newer_than:7d'))
 
 SCORE_THRESHOLD = 7.0
 

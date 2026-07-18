@@ -77,6 +77,12 @@ def test_parse_json_response_with_preamble():
     assert result["ideas"][0]["title"] == "Test"
 
 
+def test_parse_json_response_bare_array():
+    response = '[{"title": "Test"}]'
+    result = _parse_json_response(response)
+    assert result == {"ideas": [{"title": "Test"}]}
+
+
 if __name__ == "__main__":
     test_build_extraction_prompt()
     print("✓ build_extraction_prompt")
@@ -94,4 +100,6 @@ if __name__ == "__main__":
     print("✓ parse_json_response markdown wrapped")
     test_parse_json_response_with_preamble()
     print("✓ parse_json_response with preamble")
+    test_parse_json_response_bare_array()
+    print("✓ parse_json_response bare array")
     print("\nAll analyzer tests passed.")

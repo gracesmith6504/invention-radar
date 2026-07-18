@@ -1,10 +1,10 @@
 def render_idea_text(idea: dict) -> str:
-    scores = idea.get("scores", {})
+    scores = idea.get("scores") or {}
     score_line = " | ".join(f"{k}: {v}" for k, v in scores.items())
     overall = idea.get("overall_score", "?")
 
     evidence_lines = []
-    for e in idea.get("evidence", []):
+    for e in idea.get("evidence") or []:
         speaker = e.get("speaker", "Unknown")
         meeting = e.get("meeting", "Unknown meeting")
         quote = e.get("quote", "")
@@ -12,7 +12,7 @@ def render_idea_text(idea: dict) -> str:
         evidence_lines.append(f'    - {speaker} ({meeting}): "{quote}" [source]({link})')
     evidence_text = "\n".join(evidence_lines) if evidence_lines else "    (no evidence recorded)"
 
-    tags = ", ".join(idea.get("tags", []))
+    tags = ", ".join(idea.get("tags") or [])
 
     return f"""## {idea['title']}  (Score: {overall}/10)
 {idea.get('description', '')}
@@ -60,9 +60,9 @@ def build_full_update(radar_data: dict, new_ideas: list[dict]) -> list[dict]:
     startup_ideas = [i for i in new_ideas if i.get("category") == "startup"]
 
     stats = {
-        "meetings_processed": len({e.get("meeting") for i in new_ideas for e in i.get("evidence", [])}),
+        "meetings_processed": len({e.get("meeting") for i in new_ideas for e in (i.get("evidence") or [])}),
         "ideas_generated": len(new_ideas),
-        "cross_connections": sum(1 for i in new_ideas if i.get("scores", {}).get("cross_meeting", 0) >= 7),
+        "cross_connections": sum(1 for i in new_ideas if (i.get("scores") or {}).get("cross_meeting", 0) >= 7),
     }
 
     from datetime import datetime, timezone

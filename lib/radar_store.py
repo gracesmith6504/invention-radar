@@ -8,8 +8,12 @@ def load_radar(path: str) -> dict:
     """Load radar.json or return empty default if file doesn't exist."""
     if not os.path.exists(path):
         return {"ideas": [], "trends": {}, "people": {}}
-    with open(path) as f:
-        return json.load(f)
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, ValueError):
+        print(f"Warning: corrupt {path}, starting fresh")
+        return {"ideas": [], "trends": {}, "people": {}}
 
 
 def save_radar(data: dict, path: str) -> None:

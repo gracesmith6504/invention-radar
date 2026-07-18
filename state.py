@@ -7,8 +7,12 @@ from datetime import datetime, timezone, timedelta
 def load_state(path: str) -> dict:
     if not os.path.exists(path):
         return {"last_run": None, "processed_emails": {}}
-    with open(path) as f:
-        return json.load(f)
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, ValueError):
+        print(f"Warning: corrupt {path}, starting fresh")
+        return {"last_run": None, "processed_emails": {}}
 
 
 def save_state(data: dict, path: str) -> None:

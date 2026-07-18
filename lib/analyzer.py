@@ -28,14 +28,20 @@ def _chat(prompt: str, system: str = "") -> str:
 def _parse_json_response(text: str) -> dict:
     md_match = re.search(r"```(?:json)?\s*\n(.*?)\n```", text, re.DOTALL)
     if md_match:
-        return json.loads(md_match.group(1))
+        parsed = json.loads(md_match.group(1))
+        if isinstance(parsed, list):
+            return {"ideas": parsed}
+        return parsed
     brace = text.find("{")
     bracket = text.find("[")
     if brace == -1 and bracket == -1:
         raise ValueError(f"No JSON found in response: {text[:200]}")
     start = min(x for x in [brace, bracket] if x >= 0)
     candidate = text[start:]
-    return json.loads(candidate)
+    parsed = json.loads(candidate)
+    if isinstance(parsed, list):
+        return {"ideas": parsed}
+    return parsed
 
 
 def run_pipeline(transcripts: list[dict], existing_ideas: list[dict]) -> list[dict]:
@@ -130,7 +136,7 @@ def startup_lens(top_ideas: list[dict]) -> list[dict]:
     for idea in ideas:
         idea["category"] = "startup"
         if "id" not in idea or not idea["id"]:
-            idea["id"] = generate_idea_id(idea.get("title", "startup"), today)
+            idea["id"] = generate_idea_id(f"startup-{idea.get('title', 'startup')}", today)
         idea.setdefault("created", today)
         idea.setdefault("status", None)
         idea.setdefault("starred", False)

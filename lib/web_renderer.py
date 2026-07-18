@@ -4,7 +4,7 @@ import html as html_mod
 
 def render_dashboard(radar_data: dict, output_path: str) -> None:
     ideas = radar_data.get("ideas", [])
-    all_tags = sorted({tag for idea in ideas for tag in idea.get("tags", [])})
+    all_tags = sorted({tag for idea in ideas for tag in (idea.get("tags") or [])})
 
     ideas_json = json.dumps(ideas)
 

@@ -44,7 +44,7 @@ def _parse_json_response(text: str) -> dict:
     return parsed
 
 
-def run_pipeline(transcripts: list[dict], existing_ideas: list[dict]) -> list[dict]:
+def run_pipeline(transcripts: list[dict], existing_ideas: list[dict]) -> tuple[list[dict], dict]:
     signals = extract_signals(transcripts)
     persona_ideas = parallel_ideation(signals)
     cross_ideas = cross_meeting_synthesis(signals, transcripts)
@@ -52,7 +52,7 @@ def run_pipeline(transcripts: list[dict], existing_ideas: list[dict]) -> list[di
     scored = consolidate_and_score(all_raw, existing_ideas)
     top_work = [i for i in scored if i.get("category") == "work" and i.get("overall_score", 0) >= 6]
     startup_ideas = startup_lens(top_work)
-    return scored + startup_ideas
+    return scored + startup_ideas, signals
 
 
 def extract_signals(transcripts: list[dict]) -> dict:
@@ -160,8 +160,10 @@ Extract signals into these categories:
 - INTENSITY: Emotional language indicating real suffering, not casual complaints.
 - PATTERN: Same problem appearing across 2+ meetings.
 
+Also write a per-meeting summary of the key pain points and problems discussed. Be concise — this is a TL;DR, not a transcript. One or two plain-English bullet points per meeting (e.g. "frustration with manual triage, nobody owning auth middleware").
+
 Return JSON:
-{{"friction": [{{"text": "...", "meeting": "...", "speaker": "..."}}], "gap": [...], "collision": [...], "intensity": [...], "pattern": [...]}}"""
+{{"friction": [{{"text": "...", "meeting": "...", "speaker": "..."}}], "gap": [...], "collision": [...], "intensity": [...], "pattern": [...], "meeting_summaries": [{{"meeting": "...", "date": "...", "summary": "..."}}]}}"""
 
 
 def _build_persona_prompt(signals: dict, persona: dict) -> str:

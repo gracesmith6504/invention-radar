@@ -50,7 +50,46 @@ def render_favourites_text(starred: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def build_full_update(radar_data: dict, new_ideas: list[dict]) -> list[dict]:
+def render_signals_text(signals: dict) -> str:
+    summaries = signals.get("meeting_summaries", [])
+    if not summaries and not any(signals.get(k) for k in ("friction", "gap", "collision", "intensity", "pattern")):
+        return ""
+
+    lines = ["## Meeting Signals\n"]
+
+    signal_by_meeting = {}
+    for category in ("friction", "gap", "collision", "intensity", "pattern"):
+        for s in signals.get(category, []):
+            meeting = s.get("meeting", "Unknown")
+            signal_by_meeting.setdefault(meeting, []).append((category.upper(), s))
+
+    for summary in summaries:
+        meeting = summary.get("meeting", "Unknown")
+        date = summary.get("date", "")
+        date_label = f" ({date})" if date else ""
+        lines.append(f"**{meeting}{date_label}:** {summary.get('summary', '')}")
+
+        for category_label, s in signal_by_meeting.get(meeting, []):
+            speaker = s.get("speaker", "")
+            speaker_label = f" — {speaker}" if speaker else ""
+            lines.append(f'- {category_label}: "{s.get("text", "")}"{speaker_label}')
+
+        lines.append("")
+
+    for meeting, items in signal_by_meeting.items():
+        if any(meeting == s.get("meeting") for s in summaries):
+            continue
+        lines.append(f"**{meeting}:**")
+        for category_label, s in items:
+            speaker = s.get("speaker", "")
+            speaker_label = f" — {speaker}" if speaker else ""
+            lines.append(f'- {category_label}: "{s.get("text", "")}"{speaker_label}')
+        lines.append("")
+
+    return "\n".join(lines) + "\n"
+
+
+def build_full_update(radar_data: dict, new_ideas: list[dict], signals: dict | None = None) -> list[dict]:
     from lib.radar_store import get_starred
 
     starred = get_starred(radar_data)
@@ -71,6 +110,11 @@ def build_full_update(radar_data: dict, new_ideas: list[dict]) -> list[dict]:
     sections = []
     sections.append(fav_text)
     sections.append(render_weekly_header(week_label, stats))
+
+    if signals:
+        signals_text = render_signals_text(signals)
+        if signals_text:
+            sections.append(signals_text)
 
     if work_ideas:
         sections.append("## Work Ideas\n\n")

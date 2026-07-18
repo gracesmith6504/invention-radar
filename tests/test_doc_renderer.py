@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from lib.doc_renderer import render_idea_text, render_weekly_header, render_favourites_text
+from lib.doc_renderer import render_idea_text, render_weekly_header, render_favourites_text, render_signals_text
 
 
 def test_render_idea_text():
@@ -48,6 +48,38 @@ def test_render_favourites_text():
     assert "exploring" in text
 
 
+def test_render_signals_text():
+    signals = {
+        "friction": [
+            {"text": "I deploy manually every time", "meeting": "Scrum", "speaker": "James"},
+        ],
+        "gap": [
+            {"text": "Nobody owns the auth middleware", "meeting": "Scrum", "speaker": "Sarah"},
+        ],
+        "collision": [],
+        "intensity": [],
+        "pattern": [],
+        "meeting_summaries": [
+            {"meeting": "Scrum", "date": "Jul 17", "summary": "Frustration with manual deployments, nobody owning auth middleware"},
+        ],
+    }
+    text = render_signals_text(signals)
+    assert "Meeting Signals" in text
+    assert "Scrum" in text
+    assert "Jul 17" in text
+    assert "Frustration with manual deployments" in text
+    assert "FRICTION" in text
+    assert "James" in text
+    assert "GAP" in text
+    assert "Sarah" in text
+
+
+def test_render_signals_text_empty():
+    signals = {"friction": [], "gap": [], "collision": [], "intensity": [], "pattern": [], "meeting_summaries": []}
+    text = render_signals_text(signals)
+    assert text == ""
+
+
 if __name__ == "__main__":
     test_render_idea_text()
     print("✓ render_idea_text")
@@ -55,4 +87,8 @@ if __name__ == "__main__":
     print("✓ render_weekly_header")
     test_render_favourites_text()
     print("✓ render_favourites_text")
+    test_render_signals_text()
+    print("✓ render_signals_text")
+    test_render_signals_text_empty()
+    print("✓ render_signals_text empty")
     print("\nAll doc_renderer tests passed.")

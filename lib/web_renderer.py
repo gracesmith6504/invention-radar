@@ -2,11 +2,36 @@ import json
 import html as html_mod
 
 
+def _build_signals_html(radar_data: dict) -> str:
+    signals = radar_data.get("meeting_signals", [])
+    if not signals:
+        return ""
+    cards = []
+    for s in signals:
+        meeting = html_mod.escape(s.get("meeting", "Unknown"))
+        date = html_mod.escape(s.get("date", ""))
+        summary = html_mod.escape(s.get("summary", ""))
+        date_label = f' <span class="signal-date">({date})</span>' if date else ""
+        cards.append(
+            f'<div class="signal-card">'
+            f'<div class="signal-meeting">{meeting}{date_label}</div>'
+            f'<div class="signal-summary">{summary}</div>'
+            f'</div>'
+        )
+    return (
+        '<div class="signals-panel">'
+        '<h2 class="signals-title">Meeting Signals</h2>'
+        '<div class="signals-grid">' + "".join(cards) + '</div>'
+        '</div>'
+    )
+
+
 def render_dashboard(radar_data: dict, output_path: str) -> None:
     ideas = radar_data.get("ideas", [])
     all_tags = sorted({tag for idea in ideas for tag in (idea.get("tags") or [])})
 
     ideas_json = json.dumps(ideas)
+    signals_html = _build_signals_html(radar_data)
 
     page = f"""<!DOCTYPE html>
 <html lang="en">
@@ -51,6 +76,14 @@ h1 {{ font-size: 28px; margin-bottom: 8px; color: #fff; }}
 .star-badge {{ color: #f59e0b; margin-left: 8px; }}
 .status-badge {{ font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #1a3a1a; color: #4ade80; margin-left: 8px; }}
 .empty {{ text-align: center; padding: 60px; color: #666; }}
+.signals-panel {{ margin-bottom: 24px; }}
+.signals-title {{ font-size: 20px; color: #fff; margin-bottom: 12px; }}
+.signals-grid {{ display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }}
+.signal-card {{ background: #141414; border: 1px solid #222; border-radius: 10px; padding: 16px; }}
+.signal-card:hover {{ border-color: #444; }}
+.signal-meeting {{ font-size: 15px; font-weight: 600; color: #60a5fa; margin-bottom: 6px; }}
+.signal-date {{ font-weight: 400; color: #888; }}
+.signal-summary {{ font-size: 14px; color: #ccc; line-height: 1.5; }}
 .sort-controls {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }}
 .sort-controls label {{ color: #888; font-size: 13px; }}
 .sort-controls select {{ padding: 4px 8px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #ccc; font-size: 13px; }}
@@ -59,6 +92,8 @@ h1 {{ font-size: 28px; margin-bottom: 8px; color: #fff; }}
 <body>
 <h1>Invention Radar</h1>
 <p class="subtitle">{len(ideas)} ideas tracked</p>
+
+{signals_html}
 
 <input type="text" class="search" id="search" placeholder="Search ideas..." oninput="filterIdeas()">
 

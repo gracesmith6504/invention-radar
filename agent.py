@@ -91,8 +91,10 @@ def main():
         return
 
     print(f"Running analysis pipeline on {len(transcripts)} transcripts...")
-    new_ideas = run_pipeline(transcripts, radar.get("ideas", []))
+    new_ideas, signals = run_pipeline(transcripts, radar.get("ideas", []))
     print(f"Generated {len(new_ideas)} ideas")
+
+    radar["meeting_signals"] = signals.get("meeting_summaries", [])
 
     radar = add_ideas(radar, new_ideas)
     radar = update_trends(radar)
@@ -108,7 +110,7 @@ def main():
     print(f"Saved {len(radar['ideas'])} total ideas to radar.json")
 
     print("Updating Google Doc...")
-    requests = build_full_update(radar, new_ideas)
+    requests = build_full_update(radar, new_ideas, signals)
     append_to_radar(token, requests)
     print("Google Doc updated")
 

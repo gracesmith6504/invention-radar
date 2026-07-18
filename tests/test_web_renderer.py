@@ -70,6 +70,40 @@ def test_render_dashboard_filter_buttons():
         assert "filter" in html.lower() or "Filter" in html
 
 
+def test_render_dashboard_with_signals():
+    data = {
+        "ideas": [
+            {"id": "test-1", "title": "Test Idea", "description": "A test", "category": "work", "tags": [], "overall_score": 8.0, "scores": {}, "created": "2026-07-17", "evidence": [], "starting_point": "", "ambitious_version": "", "status": None, "starred": False, "related_ideas": []},
+        ],
+        "meeting_signals": [
+            {"meeting": "Scrum", "date": "Jul 17", "summary": "Frustration with manual triage"},
+            {"meeting": "Platform Weekly", "date": "Jul 17", "summary": "CI pipelines keep breaking"},
+        ],
+        "trends": {},
+        "people": {},
+    }
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "dashboard.html")
+        render_dashboard(data, path)
+        with open(path) as f:
+            html = f.read()
+        assert "Meeting Signals" in html
+        assert "Scrum" in html
+        assert "Frustration with manual triage" in html
+        assert "Platform Weekly" in html
+        assert "CI pipelines keep breaking" in html
+
+
+def test_render_dashboard_no_signals():
+    data = {"ideas": [], "trends": {}, "people": {}}
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "dashboard.html")
+        render_dashboard(data, path)
+        with open(path) as f:
+            html = f.read()
+        assert "Meeting Signals" not in html
+
+
 if __name__ == "__main__":
     test_render_dashboard_creates_file()
     print("✓ render_dashboard creates file")
@@ -77,4 +111,8 @@ if __name__ == "__main__":
     print("✓ render_dashboard empty")
     test_render_dashboard_filter_buttons()
     print("✓ render_dashboard filter buttons")
+    test_render_dashboard_with_signals()
+    print("✓ render_dashboard with signals")
+    test_render_dashboard_no_signals()
+    print("✓ render_dashboard no signals")
     print("\nAll web_renderer tests passed.")

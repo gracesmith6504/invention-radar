@@ -24,6 +24,16 @@ def test_build_extraction_prompt():
     assert "Scrum" in prompt
 
 
+def test_build_extraction_prompt_includes_meeting_summaries():
+    transcripts = [
+        {"meeting_name": "Scrum", "date": "2026-07-17", "text": "We keep manually deploying."},
+    ]
+    prompt = _build_extraction_prompt(transcripts)
+    assert "meeting_summaries" in prompt
+    assert "summary" in prompt
+    assert "TL;DR" in prompt
+
+
 def test_build_persona_prompt():
     signals = {"friction": [{"text": "manual deployments", "meeting": "Scrum"}]}
     persona = {"name": "logistics coordinator", "prompt": "You are a logistics coordinator."}
@@ -86,6 +96,8 @@ def test_parse_json_response_bare_array():
 if __name__ == "__main__":
     test_build_extraction_prompt()
     print("✓ build_extraction_prompt")
+    test_build_extraction_prompt_includes_meeting_summaries()
+    print("✓ build_extraction_prompt includes meeting_summaries")
     test_build_persona_prompt()
     print("✓ build_persona_prompt")
     test_build_cross_meeting_prompt()

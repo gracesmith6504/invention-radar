@@ -13,9 +13,9 @@ An AI agent that reads your meeting transcripts, extracts problems and opportuni
 
 ## Two modes
 
-**Automated** — runs as an OpenShell CronJob on OpenShift (weekdays at 5pm UTC), using Sonnet via Vertex AI.
+**Automated** — runs as an OpenShell CronJob on OpenShift (weekdays at 5pm Irish time), using Sonnet via Vertex AI.
 
-**Manual** — run `/invention-radar` in Claude Code to trigger on demand. Supports filtering: `/invention-radar ignas` or `/invention-radar today`.
+**Manual** — run `/invention-radar` in Claude Code to trigger on demand. Supports filtering: `/invention-radar scrum` or `/invention-radar today`.
 
 ## Scoring
 

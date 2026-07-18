@@ -8,7 +8,7 @@ Analyze recent meeting transcripts from Gmail and generate invention ideas.
 
 ## Usage
 - `/invention-radar` — process all new meetings since last run
-- `/invention-radar ignas` — focus on Ignas meetings only
+- `/invention-radar scrum` — focus on scrum meetings only
 - `/invention-radar today` — only today's meetings
 
 ## What This Does

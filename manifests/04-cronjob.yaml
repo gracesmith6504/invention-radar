@@ -4,7 +4,8 @@ metadata:
   name: invention-radar
   namespace: invention-radar
 spec:
-  schedule: "0 17 * * 1-5"  # 5pm UTC, weekdays only
+  schedule: "0 17 * * 1-5"  # 5pm Irish time, weekdays only
+  timeZone: "Europe/Dublin"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

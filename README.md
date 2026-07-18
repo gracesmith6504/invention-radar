@@ -1,0 +1,141 @@
+# Invention Radar
+
+An AI agent that reads your meeting transcripts, extracts problems and opportunities, and generates ranked invention ideas — each with a Starting Point (MVP) and an Ambitious Version.
+
+## How it works
+
+1. Searches Gmail for Gemini meeting notes
+2. Reads the linked Google Doc transcripts (read-only — never edits source docs)
+3. Runs a 5-step LLM pipeline: signal extraction, parallel persona ideation, cross-meeting synthesis, scoring, and startup lens
+4. Appends ranked ideas to a persistent Google Doc
+5. Generates a local HTML dashboard with search, filtering, and sorting
+6. Sends Slack DMs for high-scoring ideas
+
+## Two modes
+
+**Automated** — runs as an OpenShell CronJob on OpenShift (weekdays at 5pm UTC), using Sonnet via Vertex AI.
+
+**Manual** — run `/invention-radar` in Claude Code to trigger on demand. Supports filtering: `/invention-radar ignas` or `/invention-radar today`.
+
+## Scoring
+
+Each idea is scored 1-10 on six criteria:
+
+| Criterion | What it measures |
+|---|---|
+| `frustration_intensity` | How painful is this problem based on speaker language? |
+| `nobody_owns_this` | Is anyone already working on it? |
+| `cross_meeting` | Does it link signals from multiple meetings? |
+| `repeat_frequency` | Has this come up before? |
+| `grace_fit` | Does it match my skills? (Python, K8s, agents, security) |
+| `demo_ability` | Could you show it working in 5 minutes? |
+
+## Security
+
+- Source meeting docs are **read-only**. The agent never writes to any doc except the Radar doc.
+- The Radar doc ID is hardcoded in the L7 network policy — writes to any other doc are blocked at the network level.
+- Runs inside an OpenShell sandbox with filesystem, process, and network isolation.
+
+## Setup
+
+### Prerequisites
+
+- Python 3.12+
+- Google Workspace OAuth credentials (client ID, secret, refresh token)
+- A Google Doc to use as the Radar output
+- (Optional) Slack incoming webhook URL
+- (Optional) OpenShift cluster with OpenShell for automated mode
+
+### Environment variables
+
+```bash
+export GOOGLE_CLIENT_ID="..."
+export GOOGLE_CLIENT_SECRET="..."
+export GOOGLE_REFRESH_TOKEN="..."
+export RADAR_DOC_ID="<your-radar-doc-id>"
+
+# LLM endpoint (OpenAI-compatible)
+export OPENAI_BASE_URL="https://..."
+export OPENAI_API_KEY="..."
+export LLM_MODEL="claude-sonnet-4-20250514"
+
+# Optional
+export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
+export STATE_FILE="./state.json"
+export RADAR_FILE="./radar.json"
+export DASHBOARD_FILE="./dashboard.html"
+```
+
+### Run locally
+
+```bash
+pip install -r requirements.txt
+python3 agent.py
+```
+
+### Run tests
+
+```bash
+python3 tests/test_state.py
+python3 tests/test_gmail_client.py
+python3 tests/test_docs_client.py
+python3 tests/test_radar_store.py
+python3 tests/test_analyzer.py
+python3 tests/test_doc_renderer.py
+python3 tests/test_web_renderer.py
+python3 tests/test_slack_notify.py
+python3 tests/test_agent.py
+```
+
+### Deploy to OpenShift
+
+```bash
+# Build and push images
+podman build -t quay.io/grasmith/invention-radar:latest -f Containerfile .
+podman push quay.io/grasmith/invention-radar:latest
+
+# Apply manifests in order
+oc apply -f manifests/01-namespace.yaml
+oc apply -f manifests/02-scc-binding.yaml
+oc apply -f manifests/03-rbac.yaml
+
+# Create secrets (fill in real values)
+oc create secret generic invention-radar-secrets -n invention-radar \
+  --from-literal=RADAR_DOC_ID="$RADAR_DOC_ID" \
+  --from-literal=GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
+  --from-literal=GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" \
+  --from-literal=GOOGLE_REFRESH_TOKEN="$GOOGLE_REFRESH_TOKEN" \
+  --from-literal=SLACK_WEBHOOK_URL="$SLACK_WEBHOOK_URL"
+
+# Create policy ConfigMap and CronJob
+oc create configmap invention-radar-policy -n invention-radar --from-file=policy.yaml=policy.yaml
+oc apply -f manifests/04-cronjob.yaml
+
+# Test with a manual run
+oc create job --from=cronjob/invention-radar invention-radar-test -n invention-radar
+oc logs -f job/invention-radar-test -n invention-radar
+```
+
+## Project structure
+
+```
+agent.py              Main orchestrator — ties all modules together
+config.py             Configuration from environment variables
+state.py              Idempotent email tracking with atomic writes
+lib/
+  auth.py             Google OAuth2 token refresh
+  google_api.py       GET/POST/PATCH helpers for Google APIs
+  gmail_client.py     Gmail search and email parsing
+  docs_client.py      Google Docs read/write and annotation extraction
+  radar_store.py      Structured data layer (radar.json) with dedup
+  analyzer.py         5-step LLM prompt pipeline with parallel personas
+  doc_renderer.py     Google Doc text rendering
+  web_renderer.py     Static HTML dashboard
+  slack_notify.py     Slack webhook notifications
+Containerfile         UBI9 Python 3.12 container image
+launcher.sh           OpenShell sandbox launcher
+policy.yaml           L7 network policy template
+manifests/            OpenShift/Kubernetes deployment manifests
+skill/                Claude Code skill for manual mode
+tests/                Unit tests
+```

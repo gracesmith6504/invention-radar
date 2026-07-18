@@ -95,7 +95,16 @@ def cross_meeting_synthesis(signals: dict, transcripts: list[dict]) -> list[dict
 
 
 def consolidate_and_score(raw_ideas: list[dict], existing_ideas: list[dict]) -> list[dict]:
-    prompt = _build_scoring_prompt(raw_ideas, existing_ideas)
+    jira_coverage = None
+    if config.JIRA_EMAIL and config.JIRA_API_TOKEN:
+        try:
+            from lib.jira_lookup import lookup_existing_work
+            jira_coverage = lookup_existing_work(raw_ideas)
+            print(f"Jira lookup complete: {sum(1 for v in jira_coverage.values() if v['covered'])}/{len(jira_coverage)} ideas have existing coverage")
+        except Exception as e:
+            print(f"Jira lookup failed (non-fatal): {e}")
+
+    prompt = _build_scoring_prompt(raw_ideas, existing_ideas, jira_coverage=jira_coverage)
     system = "You are a critical evaluator. Score harshly. Discard weak ideas. Output valid JSON only."
     response = _chat(prompt, system)
     try:
@@ -219,9 +228,24 @@ For each cross-meeting connection, provide:
 Return JSON: {{"ideas": [...]}}"""
 
 
-def _build_scoring_prompt(raw_ideas: list[dict], existing_ideas: list[dict]) -> str:
+def _build_scoring_prompt(raw_ideas: list[dict], existing_ideas: list[dict], jira_coverage: dict | None = None) -> str:
     ideas_text = json.dumps(raw_ideas, indent=2)
     existing_titles = [i.get("title", "") for i in existing_ideas[:50]]
+
+    jira_section = ""
+    if jira_coverage:
+        lines = []
+        for title, data in jira_coverage.items():
+            if data["covered"]:
+                issue_strs = [
+                    f"{iss['key']} {iss['type']} \"{iss['summary']}\" — {iss['status']}"
+                    for iss in data["issues"]
+                ]
+                lines.append(f"- \"{title}\": {data['issue_count']} matching issues found ({', '.join(issue_strs)})")
+            else:
+                lines.append(f"- \"{title}\": No matching issues found")
+        jira_section = "\n\nJIRA COVERAGE (real data — use this for nobody_owns_this scoring):\n" + "\n".join(lines)
+
     return f"""Score and deduplicate these invention ideas.
 
 RAW IDEAS:
@@ -229,10 +253,11 @@ RAW IDEAS:
 
 ALREADY EXISTING IDEAS (avoid duplicating these):
 {json.dumps(existing_titles)}
+{jira_section}
 
 Score each idea on these criteria (1-10):
 - frustration_intensity: How painful is this problem based on speaker language?
-- nobody_owns_this: Is anyone already working on it? (10 = total vacuum)
+- nobody_owns_this: Is anyone already working on it? (10 = total vacuum){" Use the JIRA COVERAGE data above as ground truth." if jira_coverage else ""}
 - cross_meeting: Does this link signals from multiple meetings?
 - repeat_frequency: Has this come up before?
 - grace_fit: Does this match Grace's skills? (OpenShell, sandboxing, Python, Jira, agents, security, Kubernetes)

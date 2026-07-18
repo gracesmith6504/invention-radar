@@ -1,0 +1,6 @@
+state.json
+radar.json
+dashboard.html
+__pycache__/
+*.pyc
+.env

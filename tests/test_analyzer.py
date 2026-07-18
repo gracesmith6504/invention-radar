@@ -93,6 +93,33 @@ def test_parse_json_response_bare_array():
     assert result == {"ideas": [{"title": "Test"}]}
 
 
+def test_build_scoring_prompt_includes_jira_coverage():
+    raw_ideas = [{"title": "Auto-deployer", "description": "Automates deployments"}]
+    existing = [{"title": "Old Idea", "id": "old"}]
+    jira_coverage = {
+        "Auto-deployer": {
+            "covered": True,
+            "issue_count": 2,
+            "issues": [
+                {"key": "RHAIENG-100", "summary": "Deploy automation", "status": "In Progress", "type": "Epic"},
+                {"key": "RHAIENG-101", "summary": "CI pipeline", "status": "Done", "type": "Story"},
+            ],
+        }
+    }
+    prompt = _build_scoring_prompt(raw_ideas, existing, jira_coverage=jira_coverage)
+    assert "JIRA COVERAGE" in prompt
+    assert "RHAIENG-100" in prompt
+    assert "In Progress" in prompt
+
+
+def test_build_scoring_prompt_without_jira_coverage():
+    raw_ideas = [{"title": "Auto-deployer", "description": "Automates deployments"}]
+    existing = [{"title": "Old Idea", "id": "old"}]
+    prompt = _build_scoring_prompt(raw_ideas, existing)
+    assert "nobody_owns_this" in prompt
+    assert "JIRA COVERAGE" not in prompt
+
+
 if __name__ == "__main__":
     test_build_extraction_prompt()
     print("✓ build_extraction_prompt")
@@ -104,6 +131,10 @@ if __name__ == "__main__":
     print("✓ build_cross_meeting_prompt")
     test_build_scoring_prompt()
     print("✓ build_scoring_prompt")
+    test_build_scoring_prompt_includes_jira_coverage()
+    print("✓ build_scoring_prompt includes jira coverage")
+    test_build_scoring_prompt_without_jira_coverage()
+    print("✓ build_scoring_prompt without jira coverage")
     test_build_startup_prompt()
     print("✓ build_startup_prompt")
     test_parse_json_response_clean()

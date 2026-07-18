@@ -11,6 +11,10 @@ LLM_MODEL = os.environ.get("LLM_MODEL", "google/gemini-2.5-flash")
 LLM_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://inference.local/v1")
 LLM_API_KEY = os.environ.get("OPENAI_API_KEY", "not-needed-openshell-injects")
 
+JIRA_URL = os.environ.get("JIRA_URL", "https://redhat.atlassian.net")
+JIRA_EMAIL = os.environ.get("JIRA_EMAIL", "")
+JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN", "")
+
 STATE_FILE = os.environ.get("STATE_FILE", "/sandbox/state.json")
 RADAR_FILE = os.environ.get("RADAR_FILE", "/sandbox/radar.json")
 DASHBOARD_FILE = os.environ.get("DASHBOARD_FILE", "/sandbox/dashboard.html")

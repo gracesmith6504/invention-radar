@@ -87,6 +87,7 @@ h1 {{ font-size: 28px; margin-bottom: 8px; color: #fff; }}
 .sort-controls {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }}
 .sort-controls label {{ color: #888; font-size: 13px; }}
 .sort-controls select {{ padding: 4px 8px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #ccc; font-size: 13px; }}
+.team-impact-badge {{ display: block; font-size: 11px; color: #4ade80; font-weight: 400; text-align: right; }}
 </style>
 </head>
 <body>
@@ -152,11 +153,16 @@ function renderIdeas(ideas) {{
   if (!ideas.length) {{ container.innerHTML = '<div class="empty">No ideas yet</div>'; return; }}
   container.innerHTML = ideas.map(idea => {{
     const scores = idea.scores || {{}};
-    const scoreHtml = Object.entries(scores).map(([k, v]) =>
+    const scoreHtml = Object.entries(scores).filter(([k]) => k !== 'grace_fit').map(([k, v]) =>
       `<div class="score-item">${{k.replace(/_/g, ' ')}}: <span class="score-val">${{v}}</span></div>`
     ).join('');
+    const impactMap = {{'some': '+0.5', 'high': '+1.0'}};
+    const impactBadge = idea.team_impact && impactMap[idea.team_impact]
+      ? `<span class="team-impact-badge">${{impactMap[idea.team_impact]}} team</span>` : '';
     const evidenceHtml = (idea.evidence || []).map(e =>
-      `<div class="evidence-item">${{e.speaker || '?'}} (${{e.meeting || '?'}}): "${{e.quote || ''}}" <a href="${{e.doc_link || '#'}}" target="_blank">[source]</a></div>`
+      typeof e === 'string'
+        ? `<div class="evidence-item">${{e}}</div>`
+        : `<div class="evidence-item">${{e.speaker || '?'}} (${{e.meeting || '?'}}): "${{e.quote || ''}}" <a href="${{e.doc_link || '#'}}" target="_blank">[source]</a></div>`
     ).join('');
     const catClass = idea.category === 'startup' ? 'tag-startup' : 'tag-work';
     const tagsHtml = (idea.tags || []).map(t => `<span class="tag tag-default">${{t}}</span>`).join('');
@@ -166,7 +172,7 @@ function renderIdeas(ideas) {{
       <div class="idea ${{idea.starred ? 'starred' : ''}}">
         <div class="idea-header">
           <div class="idea-title">${{idea.title || 'Untitled'}}${{starBadge}}${{statusBadge}}</div>
-          <div class="idea-score">${{idea.overall_score || '?'}}</div>
+          <div class="idea-score">${{idea.overall_score || '?'}}${{impactBadge}}</div>
         </div>
         <div class="idea-desc">${{idea.description || ''}}</div>
         <div class="idea-tags"><span class="tag ${{catClass}}">${{idea.category || 'work'}}</span>${{tagsHtml}}</div>

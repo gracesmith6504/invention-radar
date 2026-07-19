@@ -7,9 +7,9 @@ GMAIL_QUERY = os.environ.get("GMAIL_QUERY_OVERRIDE", os.environ.get("GMAIL_QUERY
 
 SCORE_THRESHOLD = 7.0
 
-LLM_MODEL = os.environ.get("LLM_MODEL", "google/gemini-2.5-flash")
-LLM_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://inference.local/v1")
-LLM_API_KEY = os.environ.get("OPENAI_API_KEY", "not-needed-openshell-injects")
+LLM_MODEL = os.environ.get("LLM_MODEL", "claude-sonnet-4-6")
+LLM_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://inference.local")
+LLM_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "not-needed-openshell-injects")
 
 JIRA_URL = os.environ.get("JIRA_URL", "https://redhat.atlassian.net")
 JIRA_EMAIL = os.environ.get("JIRA_EMAIL", "")
@@ -49,6 +49,5 @@ SCORING_CRITERIA = [
     "nobody_owns_this",
     "cross_meeting",
     "repeat_frequency",
-    "grace_fit",
     "demo_ability",
 ]

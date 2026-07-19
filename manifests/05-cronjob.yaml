@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: invention-radar
-  namespace: invention-radar
+  name: meeting-miner
+  namespace: openshell
 spec:
-  schedule: "0 17 * * 1-5"  # 5pm Irish time, weekdays only
+  schedule: "0 17 * * 1-5"
   timeZone: "Europe/Dublin"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -12,57 +12,61 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 1
-      activeDeadlineSeconds: 600
+      activeDeadlineSeconds: 1800
       template:
         spec:
-          serviceAccountName: invention-radar-sa
+          serviceAccountName: meeting-miner-sa
           restartPolicy: Never
           containers:
             - name: launcher
-              image: quay.io/grasmith/invention-radar-launcher:latest
+              image: quay.io/rh-ee-grasmith/meeting-miner-launcher:latest
               command: ["/bin/bash", "/app/launcher.sh"]
               env:
                 - name: AGENT_IMAGE
-                  value: "quay.io/grasmith/invention-radar:latest"
+                  value: "quay.io/rh-ee-grasmith/meeting-miner:latest"
+                - name: OPENSHELL_GATEWAY_ENDPOINT
+                  value: "http://openshell.openshell.svc.cluster.local:8080"
                 - name: RADAR_DOC_ID
                   valueFrom:
                     secretKeyRef:
-                      name: invention-radar-secrets
+                      name: meeting-miner-secrets
                       key: RADAR_DOC_ID
                 - name: GOOGLE_CLIENT_ID
                   valueFrom:
                     secretKeyRef:
-                      name: invention-radar-secrets
+                      name: meeting-miner-secrets
                       key: GOOGLE_CLIENT_ID
                 - name: GOOGLE_CLIENT_SECRET
                   valueFrom:
                     secretKeyRef:
-                      name: invention-radar-secrets
+                      name: meeting-miner-secrets
                       key: GOOGLE_CLIENT_SECRET
                 - name: GOOGLE_REFRESH_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: invention-radar-secrets
+                      name: meeting-miner-secrets
                       key: GOOGLE_REFRESH_TOKEN
                 - name: SLACK_WEBHOOK_URL
                   valueFrom:
                     secretKeyRef:
-                      name: invention-radar-secrets
+                      name: meeting-miner-secrets
                       key: SLACK_WEBHOOK_URL
                 - name: JIRA_EMAIL
                   valueFrom:
                     secretKeyRef:
-                      name: invention-radar-secrets
+                      name: meeting-miner-secrets
                       key: JIRA_EMAIL
                 - name: JIRA_API_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: invention-radar-secrets
+                      name: meeting-miner-secrets
                       key: JIRA_API_TOKEN
-                - name: OPENAI_BASE_URL
-                  value: "https://inference.local/v1"
+                - name: ANTHROPIC_BASE_URL
+                  value: "https://inference.local"
+                - name: ANTHROPIC_API_KEY
+                  value: "not-needed"
                 - name: LLM_MODEL
-                  value: "google/gemini-2.5-flash"
+                  value: "claude-sonnet-4-6"
               volumeMounts:
                 - name: policy
                   mountPath: /app/policy-template.yaml
@@ -70,4 +74,4 @@ spec:
           volumes:
             - name: policy
               configMap:
-                name: invention-radar-policy
+                name: meeting-miner-policy

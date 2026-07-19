@@ -1,1 +1,1 @@
-# invention-radar library
+# meeting-miner library

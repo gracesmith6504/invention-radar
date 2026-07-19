@@ -1,15 +1,15 @@
 ---
-description: "Run the Invention Radar — analyze meeting transcripts for invention ideas"
+description: "Run Meeting Miner — analyze meeting transcripts for invention ideas"
 ---
 
-# Invention Radar
+# Meeting Miner
 
 Analyze recent meeting transcripts from Gmail and generate invention ideas.
 
 ## Usage
-- `/invention-radar` — process all new meetings since last run
-- `/invention-radar scrum` — focus on scrum meetings only
-- `/invention-radar today` — only today's meetings
+- `/meeting-miner` — process all new meetings since last run
+- `/meeting-miner scrum` — focus on scrum meetings only
+- `/meeting-miner today` — only today's meetings
 
 ## What This Does
 
@@ -18,8 +18,8 @@ Analyze recent meeting transcripts from Gmail and generate invention ideas.
 3. Extracts problems, pain points, and opportunities
 4. Generates invention ideas with Starting Point (MVP) and Ambitious Version
 5. Scores ideas on 6 criteria and ranks them
-6. Appends to the persistent Invention Radar Google Doc
-7. Generates an HTML dashboard at `~/Desktop/invention-radar-dashboard.html`
+6. Appends to the persistent Radar Google Doc
+7. Generates an HTML dashboard at `~/Desktop/meeting-miner-dashboard.html`
 
 ## Security
 - Source meeting docs are READ ONLY. The agent NEVER writes to any doc except the Radar doc.
@@ -28,10 +28,10 @@ Analyze recent meeting transcripts from Gmail and generate invention ideas.
 ## Steps
 
 1. Read the user's argument (if any) to determine scope filter
-2. Run the invention-radar Python agent:
+2. Run the meeting-miner Python agent:
 
 ```bash
-cd ~/invention-radar
+cd ~/meeting-miner
 # Set scope filter based on user argument
 FILTER_ARG="${ARGUMENTS:-}"
 
@@ -41,16 +41,16 @@ if [ -n "$FILTER_ARG" ]; then
 fi
 
 # Use local paths for state/radar/dashboard
-export STATE_FILE="$HOME/invention-radar/state.json"
-export RADAR_FILE="$HOME/invention-radar/radar.json"
-export DASHBOARD_FILE="$HOME/Desktop/invention-radar-dashboard.html"
+export STATE_FILE="$HOME/meeting-miner/state.json"
+export RADAR_FILE="$HOME/meeting-miner/radar.json"
+export DASHBOARD_FILE="$HOME/Desktop/meeting-miner-dashboard.html"
 
 python3 agent.py
 ```
 
 3. After the agent runs, open the dashboard:
 ```bash
-open ~/Desktop/invention-radar-dashboard.html
+open ~/Desktop/meeting-miner-dashboard.html
 ```
 
 4. Report summary: how many meetings processed, how many ideas generated, any high-scoring ones worth checking.

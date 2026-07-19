@@ -48,21 +48,30 @@ def read_radar_annotations(radar_text: str) -> dict[str, str]:
     annotations = {}
     for line in radar_text.split("\n"):
         line = line.strip()
-        if not line.startswith("## "):
-            continue
-        heading = line[3:].strip()
-
-        if "⭐" in heading:
-            name = heading.replace("⭐", "").strip()
-            annotations[name] = "starred"
+        if not line:
             continue
 
-        # Fixed regex: \[([^\]]+)\] matches any text inside brackets, including spaces
-        status_match = re.search(r"\[([^\]]+)\]", heading)
+        if "⭐" in line:
+            name = line.replace("⭐", "").strip()
+            if name:
+                annotations[name] = "starred"
+            continue
+
+        if line.startswith("*") and not line.startswith("**"):
+            name = line.lstrip("*").strip()
+            if name:
+                annotations[name] = "starred"
+            continue
+        if line.endswith("*") and not line.endswith("**"):
+            name = line.rstrip("*").strip()
+            if name:
+                annotations[name] = "starred"
+            continue
+
+        status_match = re.search(r"\[([^\]]+)\]", line)
         if status_match:
             status = status_match.group(1)
-            # Fixed cleanup regex similarly
-            name = re.sub(r"\s*\[[^\]]+\]", "", heading).strip()
+            name = re.sub(r"\s*\[[^\]]+\]", "", line).strip()
             if status in ("exploring", "building", "parked", "pitched to team"):
                 annotations[name] = status
     return annotations

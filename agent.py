@@ -110,7 +110,7 @@ def main():
     print(f"Saved {len(radar['ideas'])} total ideas to radar.json")
 
     print("Updating Google Doc...")
-    requests = build_full_update(radar, new_ideas, signals)
+    requests = build_full_update(radar, new_ideas, signals, meetings_count=len(transcripts))
     append_to_radar(token, requests)
     print("Google Doc updated")
 

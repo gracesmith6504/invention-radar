@@ -17,7 +17,6 @@ openshell sandbox create \
   --from="$AGENT_IMAGE" \
   --name="$SANDBOX_NAME" \
   --policy="$POLICY_FILE" \
-  --provider="${INFERENCE_PROVIDER:-vertex-prod}" \
   --no-keep \
   --env="RADAR_DOC_ID=${RADAR_DOC_ID}" \
   --env="GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" \
@@ -26,9 +25,9 @@ openshell sandbox create \
   --env="SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}" \
   --env="JIRA_EMAIL=${JIRA_EMAIL:-}" \
   --env="JIRA_API_TOKEN=${JIRA_API_TOKEN:-}" \
-  --env="ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-https://inference.local}" \
-  --env="ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-not-needed}" \
-  --env="LLM_MODEL=${LLM_MODEL:-claude-sonnet-4-6}" \
+  --env="OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://inference.local/v1}" \
+  --env="OPENAI_API_KEY=${OPENAI_API_KEY:-not-needed}" \
+  --env="LLM_MODEL=${LLM_MODEL:-google/gemini-2.5-flash}" \
   --env="STATE_FILE=/sandbox/state.json" \
   --env="RADAR_FILE=/sandbox/radar.json" \
   --env="DASHBOARD_FILE=/sandbox/dashboard.html" \

@@ -6,6 +6,7 @@ filesystem_policy:
     - /usr
     - /lib
     - /lib64
+    - /opt
     - /app
     - /etc
   read_write:
@@ -27,13 +28,14 @@ network_policies:
       - host: gmail.googleapis.com
         port: 443
         protocol: rest
+        tls: terminate
         enforcement: enforce
         rules:
           - allow:
               method: GET
               path: /gmail/v1/users/me/**
     binaries:
-      - { path: /usr/bin/python3 }
+      - { path: /opt/app-root/bin/python3 }
 
   docs_read:
     name: "Google Docs API (read any doc)"
@@ -41,13 +43,14 @@ network_policies:
       - host: docs.googleapis.com
         port: 443
         protocol: rest
+        tls: terminate
         enforcement: enforce
         rules:
           - allow:
               method: GET
               path: /v1/documents/**
     binaries:
-      - { path: /usr/bin/python3 }
+      - { path: /opt/app-root/bin/python3 }
 
   docs_write_radar:
     name: "Google Docs API (write Radar doc only)"
@@ -55,13 +58,14 @@ network_policies:
       - host: docs.googleapis.com
         port: 443
         protocol: rest
+        tls: terminate
         enforcement: enforce
         rules:
           - allow:
               method: POST
               path: /v1/documents/__RADAR_DOC_ID__:batchUpdate
     binaries:
-      - { path: /usr/bin/python3 }
+      - { path: /opt/app-root/bin/python3 }
 
   oauth:
     name: "Google OAuth2 token refresh"
@@ -69,13 +73,14 @@ network_policies:
       - host: oauth2.googleapis.com
         port: 443
         protocol: rest
+        tls: terminate
         enforcement: enforce
         rules:
           - allow:
               method: POST
               path: /token
     binaries:
-      - { path: /usr/bin/python3 }
+      - { path: /opt/app-root/bin/python3 }
 
   slack:
     name: "Slack webhook (DM only)"
@@ -83,13 +88,29 @@ network_policies:
       - host: hooks.slack.com
         port: 443
         protocol: rest
+        tls: terminate
         enforcement: enforce
         rules:
           - allow:
               method: POST
               path: /services/**
     binaries:
-      - { path: /usr/bin/python3 }
+      - { path: /opt/app-root/bin/python3 }
+
+  jira:
+    name: "Jira API (search only)"
+    endpoints:
+      - host: redhat.atlassian.net
+        port: 443
+        protocol: rest
+        tls: terminate
+        enforcement: enforce
+        rules:
+          - allow:
+              method: GET
+              path: /rest/api/2/search
+    binaries:
+      - { path: /opt/app-root/bin/python3 }
 
   inference:
     name: "LLM inference via OpenShell gateway"
@@ -97,10 +118,11 @@ network_policies:
       - host: inference.local
         port: 443
         protocol: rest
+        tls: terminate
         enforcement: enforce
         rules:
           - allow:
               method: POST
               path: /v1/**
     binaries:
-      - { path: /usr/bin/python3 }
+      - { path: /opt/app-root/bin/python3 }

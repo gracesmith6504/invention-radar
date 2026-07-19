@@ -1,32 +1,37 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: invention-radar-sa
-  namespace: invention-radar
+  name: meeting-miner-sa
+  namespace: openshell
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: invention-radar-role
-  namespace: invention-radar
+  name: meeting-miner-role
+  namespace: openshell
 rules:
   - apiGroups: [""]
     resources: ["pods", "pods/log"]
     verbs: ["get", "list", "watch", "create", "delete"]
   - apiGroups: [""]
-    resources: ["configmaps", "secrets"]
-    verbs: ["get", "list"]
+    resources: ["configmaps"]
+    resourceNames: ["meeting-miner-policy"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["meeting-miner-secrets"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: invention-radar-binding
-  namespace: invention-radar
+  name: meeting-miner-binding
+  namespace: openshell
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: invention-radar-role
+  name: meeting-miner-role
 subjects:
   - kind: ServiceAccount
-    name: invention-radar-sa
-    namespace: invention-radar
+    name: meeting-miner-sa
+    namespace: openshell

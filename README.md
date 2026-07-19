@@ -1,4 +1,4 @@
-# Invention Radar
+# Meeting Miner
 
 An AI agent that reads your meeting transcripts, extracts problems and opportunities, and generates ranked invention ideas — each with a Starting Point (MVP) and an Ambitious Version.
 
@@ -15,20 +15,21 @@ An AI agent that reads your meeting transcripts, extracts problems and opportuni
 
 **Automated** — runs as an OpenShell CronJob on OpenShift (weekdays at 5pm Irish time), using Sonnet via Vertex AI.
 
-**Manual** — run `/invention-radar` in Claude Code to trigger on demand. Supports filtering: `/invention-radar scrum` or `/invention-radar today`.
+**Manual** — run `/meeting-miner` in Claude Code to trigger on demand. Supports filtering: `/meeting-miner scrum` or `/meeting-miner today`.
 
 ## Scoring
 
-Each idea is scored 1-10 on six criteria:
+Each idea is scored 1-10 on five core criteria, with an optional team impact bonus:
 
 | Criterion | What it measures |
 |---|---|
 | `frustration_intensity` | How painful is this problem based on speaker language? |
-| `nobody_owns_this` | Is anyone already working on it? |
+| `nobody_owns_this` | Is anyone already working on it? (cross-checked with Jira) |
 | `cross_meeting` | Does it link signals from multiple meetings? |
 | `repeat_frequency` | Has this come up before? |
-| `grace_fit` | Does it match my skills? (Python, K8s, agents, security) |
 | `demo_ability` | Could you show it working in 5 minutes? |
+
+**Bonus:** `team_impact` adds +0.5 ("some") or +1.0 ("high") if the Agent Ops team would actually use it day-to-day. Nudges rankings without dominating them.
 
 ## Security
 
@@ -54,10 +55,10 @@ export GOOGLE_CLIENT_SECRET="..."
 export GOOGLE_REFRESH_TOKEN="..."
 export RADAR_DOC_ID="<your-radar-doc-id>"
 
-# LLM endpoint (OpenAI-compatible)
-export OPENAI_BASE_URL="https://..."
-export OPENAI_API_KEY="..."
-export LLM_MODEL="claude-sonnet-4-20250514"
+# LLM endpoint (Anthropic SDK — inference.local when running in OpenShell)
+export ANTHROPIC_BASE_URL="https://inference.local"
+export ANTHROPIC_API_KEY="not-needed-openshell-injects"
+export LLM_MODEL="claude-sonnet-4-6"
 
 # Optional
 export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
@@ -91,29 +92,33 @@ python3 tests/test_agent.py
 
 ```bash
 # Build and push images
-podman build -t quay.io/grasmith/invention-radar:latest -f Containerfile .
-podman push quay.io/grasmith/invention-radar:latest
+podman build -t quay.io/grasmith/meeting-miner:latest -f Containerfile .
+podman build -t quay.io/grasmith/meeting-miner-launcher:latest -f launcher/Containerfile .
+podman push quay.io/grasmith/meeting-miner:latest
+podman push quay.io/grasmith/meeting-miner-launcher:latest
 
 # Apply manifests in order
-oc apply -f manifests/01-namespace.yaml
 oc apply -f manifests/02-scc-binding.yaml
 oc apply -f manifests/03-rbac.yaml
+oc apply -f manifests/03-network-policy.yaml
+oc apply -f manifests/04-configmap.yaml
 
 # Create secrets (fill in real values)
-oc create secret generic invention-radar-secrets -n invention-radar \
+oc create secret generic meeting-miner-secrets -n openshell \
   --from-literal=RADAR_DOC_ID="$RADAR_DOC_ID" \
   --from-literal=GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
   --from-literal=GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" \
   --from-literal=GOOGLE_REFRESH_TOKEN="$GOOGLE_REFRESH_TOKEN" \
-  --from-literal=SLACK_WEBHOOK_URL="$SLACK_WEBHOOK_URL"
+  --from-literal=SLACK_WEBHOOK_URL="$SLACK_WEBHOOK_URL" \
+  --from-literal=JIRA_EMAIL="$JIRA_EMAIL" \
+  --from-literal=JIRA_API_TOKEN="$JIRA_API_TOKEN"
 
-# Create policy ConfigMap and CronJob
-oc create configmap invention-radar-policy -n invention-radar --from-file=policy.yaml=policy.yaml
-oc apply -f manifests/04-cronjob.yaml
+# Apply CronJob
+oc apply -f manifests/05-cronjob.yaml
 
 # Test with a manual run
-oc create job --from=cronjob/invention-radar invention-radar-test -n invention-radar
-oc logs -f job/invention-radar-test -n invention-radar
+oc create job --from=cronjob/meeting-miner meeting-miner-test -n openshell
+oc logs -f job/meeting-miner-test -n openshell
 ```
 
 ## Project structure
@@ -132,7 +137,9 @@ lib/
   doc_renderer.py     Google Doc text rendering
   web_renderer.py     Static HTML dashboard
   slack_notify.py     Slack webhook notifications
-Containerfile         UBI9 Python 3.12 container image
+launcher/
+  Containerfile       UBI9 minimal + openshell CLI launcher image
+Containerfile         UBI9 Python 3.12 agent container image
 launcher.sh           OpenShell sandbox launcher
 policy.yaml           L7 network policy template
 manifests/            OpenShift/Kubernetes deployment manifests

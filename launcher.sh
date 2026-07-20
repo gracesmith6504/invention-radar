@@ -18,7 +18,6 @@ openshell sandbox create \
   --name="$SANDBOX_NAME" \
   --policy="$POLICY_FILE" \
   --provider="${INFERENCE_PROVIDER:-vertex-prod}" \
-  --no-keep \
   --env="RADAR_DOC_ID=${RADAR_DOC_ID}" \
   --env="GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" \
   --env="GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" \
@@ -35,4 +34,15 @@ openshell sandbox create \
   --env="DASHBOARD_DRIVE_FOLDER_ID=${DASHBOARD_DRIVE_FOLDER_ID:-}" \
   -- /opt/app-root/bin/python3 /app/agent.py
 
+echo "[launcher] Downloading dashboard from sandbox..."
+openshell sandbox download "$SANDBOX_NAME" /sandbox/dashboard.html /tmp/dashboard.html 2>/dev/null && \
+  oc create configmap meeting-miner-dashboard \
+    --from-file=index.html=/tmp/dashboard.html \
+    -n openshell --dry-run=client -o yaml | oc apply -f - 2>/dev/null && \
+  oc rollout restart deployment/meeting-miner-dashboard -n openshell 2>/dev/null && \
+  echo "[launcher] Dashboard updated" || \
+  echo "[launcher] Dashboard update failed (non-fatal)"
+
+echo "[launcher] Cleaning up sandbox..."
+openshell sandbox delete "$SANDBOX_NAME" 2>/dev/null || true
 echo "[launcher] Sandbox $SANDBOX_NAME completed and destroyed"

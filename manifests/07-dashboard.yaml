@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: meeting-miner-dashboard
+  namespace: openshell
+data:
+  index.html: |
+    <html><body style="background:#0a0a0a;color:#888;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh"><p>Dashboard not generated yet — waiting for first CronJob run.</p></body></html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meeting-miner-dashboard
+  namespace: openshell
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: meeting-miner-dashboard
+  template:
+    metadata:
+      labels:
+        app: meeting-miner-dashboard
+    spec:
+      containers:
+        - name: httpd
+          image: registry.access.redhat.com/ubi9/ubi:latest
+          command: ["python3", "-m", "http.server", "8080", "--directory", "/html"]
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: html
+              mountPath: /html
+              readOnly: true
+          resources:
+            requests:
+              memory: 16Mi
+              cpu: 5m
+            limits:
+              memory: 64Mi
+              cpu: 50m
+      volumes:
+        - name: html
+          configMap:
+            name: meeting-miner-dashboard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: meeting-miner-dashboard
+  namespace: openshell
+spec:
+  selector:
+    app: meeting-miner-dashboard
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: meeting-miner-dashboard
+  namespace: openshell
+spec:
+  to:
+    kind: Service
+    name: meeting-miner-dashboard
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge

@@ -118,6 +118,18 @@ def main():
     render_dashboard(radar, config.DASHBOARD_FILE)
     print(f"Dashboard written to {config.DASHBOARD_FILE}")
 
+    if config.DASHBOARD_DRIVE_FOLDER_ID:
+        try:
+            from lib.google_api import drive_upload_or_update, drive_find_file
+            existing_id = drive_find_file(token, "meeting-miner-dashboard.html", config.DASHBOARD_DRIVE_FOLDER_ID)
+            result = drive_upload_or_update(
+                token, config.DASHBOARD_FILE, "meeting-miner-dashboard.html", "text/html",
+                folder_id=config.DASHBOARD_DRIVE_FOLDER_ID, file_id=existing_id,
+            )
+            print(f"Dashboard uploaded to Drive (id: {result.get('id', '?')})")
+        except Exception as e:
+            print(f"Dashboard Drive upload failed (non-fatal): {e}")
+
     sent = notify_high_scores(new_ideas)
     if sent:
         print(f"Sent {sent} Slack notifications")

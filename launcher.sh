@@ -32,6 +32,7 @@ openshell sandbox create \
   --env="STATE_FILE=/sandbox/state.json" \
   --env="RADAR_FILE=/sandbox/radar.json" \
   --env="DASHBOARD_FILE=/sandbox/dashboard.html" \
+  --env="DASHBOARD_DRIVE_FOLDER_ID=${DASHBOARD_DRIVE_FOLDER_ID:-}" \
   -- /opt/app-root/bin/python3 /app/agent.py
 
 echo "[launcher] Sandbox $SANDBOX_NAME completed and destroyed"

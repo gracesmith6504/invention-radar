@@ -18,6 +18,7 @@ JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN", "")
 STATE_FILE = os.environ.get("STATE_FILE", "/sandbox/state.json")
 RADAR_FILE = os.environ.get("RADAR_FILE", "/sandbox/radar.json")
 DASHBOARD_FILE = os.environ.get("DASHBOARD_FILE", "/sandbox/dashboard.html")
+DASHBOARD_DRIVE_FOLDER_ID = os.environ.get("DASHBOARD_DRIVE_FOLDER_ID", "")
 
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")

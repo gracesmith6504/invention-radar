@@ -112,6 +112,27 @@ network_policies:
     binaries:
       - { path: /opt/app-root/bin/python3 }
 
+  drive:
+    name: "Google Drive API (dashboard upload)"
+    endpoints:
+      - host: www.googleapis.com
+        port: 443
+        protocol: rest
+        tls: terminate
+        enforcement: enforce
+        rules:
+          - allow:
+              method: POST
+              path: /upload/drive/v3/files
+          - allow:
+              method: PATCH
+              path: /upload/drive/v3/files/**
+          - allow:
+              method: GET
+              path: /drive/v3/files
+    binaries:
+      - { path: /opt/app-root/bin/python3 }
+
   inference:
     name: "LLM inference via OpenShell gateway"
     endpoints:

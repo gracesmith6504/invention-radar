@@ -8,7 +8,7 @@ An AI agent that reads your meeting transcripts, extracts problems and opportuni
 2. Reads the linked Google Doc transcripts (read-only — never edits source docs)
 3. Runs a 5-step LLM pipeline: signal extraction, parallel persona ideation, cross-meeting synthesis, scoring, and startup lens
 4. Appends ranked ideas to a persistent Google Doc
-5. Generates a local HTML dashboard with search, filtering, and sorting
+5. Generates an interactive HTML dashboard (hosted on the cluster via a Route, also uploaded to Google Drive)
 6. Sends Slack DMs for high-scoring ideas
 
 ## Two modes
@@ -60,8 +60,13 @@ export ANTHROPIC_BASE_URL="https://inference.local"
 export ANTHROPIC_API_KEY="not-needed-openshell-injects"
 export LLM_MODEL="claude-sonnet-4-6"
 
+# Jira (used to cross-check nobody_owns_this scoring)
+export JIRA_EMAIL="your-email@redhat.com"
+export JIRA_API_TOKEN="..."
+
 # Optional
 export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
+export DASHBOARD_DRIVE_FOLDER_ID="<google-drive-folder-id>"
 export STATE_FILE="./state.json"
 export RADAR_FILE="./radar.json"
 export DASHBOARD_FILE="./dashboard.html"
@@ -91,17 +96,18 @@ python3 tests/test_agent.py
 ### Deploy to OpenShift
 
 ```bash
-# Build and push images
-podman build -t quay.io/grasmith/meeting-miner:latest -f Containerfile .
-podman build -t quay.io/grasmith/meeting-miner-launcher:latest -f launcher/Containerfile .
-podman push quay.io/grasmith/meeting-miner:latest
-podman push quay.io/grasmith/meeting-miner-launcher:latest
+# Build and push images (--platform required on ARM Macs)
+podman build --platform linux/amd64 -t quay.io/rh-ee-grasmith/meeting-miner:latest -f Containerfile .
+podman build --platform linux/amd64 -t quay.io/rh-ee-grasmith/meeting-miner-launcher:latest -f launcher/Containerfile .
+podman push quay.io/rh-ee-grasmith/meeting-miner:latest
+podman push quay.io/rh-ee-grasmith/meeting-miner-launcher:latest
 
 # Apply manifests in order
 oc apply -f manifests/02-scc-binding.yaml
 oc apply -f manifests/03-rbac.yaml
 oc apply -f manifests/03-network-policy.yaml
 oc apply -f manifests/04-configmap.yaml
+oc apply -f manifests/07-dashboard.yaml
 
 # Create secrets (fill in real values)
 oc create secret generic meeting-miner-secrets -n openshell \
@@ -129,20 +135,22 @@ config.py             Configuration from environment variables
 state.py              Idempotent email tracking with atomic writes
 lib/
   auth.py             Google OAuth2 token refresh
-  google_api.py       GET/POST/PATCH helpers for Google APIs
+  google_api.py       GET/POST/PATCH helpers for Google APIs + Drive upload
   gmail_client.py     Gmail search and email parsing
   docs_client.py      Google Docs read/write and annotation extraction
   radar_store.py      Structured data layer (radar.json) with dedup
   analyzer.py         5-step LLM prompt pipeline with parallel personas
+  jira_lookup.py      Cross-checks ideas against Jira for nobody_owns_this
   doc_renderer.py     Google Doc text rendering
   web_renderer.py     Static HTML dashboard
   slack_notify.py     Slack webhook notifications
 launcher/
-  Containerfile       UBI9 minimal + openshell CLI launcher image
+  Containerfile       UBI9 minimal + openshell CLI + oc client launcher image
 Containerfile         UBI9 Python 3.12 agent container image
-launcher.sh           OpenShell sandbox launcher
+launcher.sh           OpenShell sandbox launcher + dashboard ConfigMap update
 policy.yaml           L7 network policy template
 manifests/            OpenShift/Kubernetes deployment manifests
+  07-dashboard.yaml   Dashboard hosting (ConfigMap + Deployment + Service + Route)
 skill/                Claude Code skill for manual mode
 tests/                Unit tests
 ```

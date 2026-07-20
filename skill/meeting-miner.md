@@ -17,7 +17,7 @@ Analyze recent meeting transcripts from Gmail and generate invention ideas.
 2. Reads the Google Doc transcripts (READ ONLY — never edits source docs)
 3. Extracts problems, pain points, and opportunities
 4. Generates invention ideas with Starting Point (MVP) and Ambitious Version
-5. Scores ideas on 6 criteria and ranks them
+5. Scores ideas on 5 criteria + team impact bonus and ranks them
 6. Appends to the persistent Radar Google Doc
 7. Generates an HTML dashboard at `~/Desktop/meeting-miner-dashboard.html`
 

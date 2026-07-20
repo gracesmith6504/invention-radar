@@ -4,3 +4,5 @@ dashboard.html
 __pycache__/
 *.pyc
 .env
+.superpowers/
+docs/superpowers/

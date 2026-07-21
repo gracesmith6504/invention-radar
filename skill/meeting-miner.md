@@ -31,7 +31,7 @@ Analyze recent meeting transcripts from Gmail and generate invention ideas.
 2. Run the meeting-miner Python agent:
 
 ```bash
-cd ~/idea-finder
+cd ~/meeting-miner
 # Set scope filter based on user argument
 FILTER_ARG="${ARGUMENTS:-}"
 

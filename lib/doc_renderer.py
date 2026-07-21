@@ -279,7 +279,7 @@ def _render_idea(doc: DocBuilder, idea: dict) -> None:
 
     evidence = idea.get("evidence") or []
     if evidence:
-        max_shown = 3
+        max_shown = 2
         doc.add_bold_text("Evidence:")
         for e in evidence[:max_shown]:
             if isinstance(e, str):
@@ -296,14 +296,22 @@ def _render_idea(doc: DocBuilder, idea: dict) -> None:
     doc.add_blank_line()
 
 
-def _render_startup_extras(doc: DocBuilder, idea: dict) -> None:
+def _render_startup_compact(doc: DocBuilder, idea: dict) -> None:
+    title = idea.get("title", "Untitled")
+    overall = idea.get("overall_score", "?")
+    doc.add_inline([
+        (f"{title} — ", {"bold": True}),
+        (f"{overall}/10", {"bold": True, "color": _score_color(overall)}),
+    ])
+    desc = idea.get("description", "")
+    if desc:
+        doc.add_gray_text(desc)
     analysis = idea.get("startup_analysis") or {}
-    if not analysis:
-        return
-    doc.add_inline([("Customer: ", {"bold": True}), (analysis.get("customer", "?"), {})])
-    doc.add_inline([("Current Spend: ", {"bold": True}), (analysis.get("current_spend", "?"), {})])
-    doc.add_inline([("MVP: ", {"bold": True}), (analysis.get("mvp", "?"), {})])
-    doc.add_inline([("Market Direction: ", {"bold": True}), (analysis.get("market_direction", "?"), {})])
+    if analysis:
+        doc.add_inline([("Customer: ", {"bold": True}), (analysis.get("customer", "?"), {})])
+        doc.add_inline([("Current Spend: ", {"bold": True}), (analysis.get("current_spend", "?"), {})])
+        doc.add_inline([("MVP: ", {"bold": True}), (analysis.get("mvp", "?"), {})])
+        doc.add_inline([("Market: ", {"bold": True}), (analysis.get("market_direction", "?"), {})])
     doc.add_blank_line()
 
 
@@ -342,7 +350,6 @@ def build_full_update(radar_data: dict, new_ideas: list[dict], signals: dict | N
         doc.add_divider()
         doc.add_heading("Startup Radar", level=2)
         for idea in sorted(startup_ideas, key=lambda i: i.get("overall_score", 0), reverse=True):
-            _render_idea(doc, idea)
-            _render_startup_extras(doc, idea)
+            _render_startup_compact(doc, idea)
 
     return doc.requests

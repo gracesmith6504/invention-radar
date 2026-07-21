@@ -6,6 +6,8 @@ SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
 GMAIL_QUERY = os.environ.get("GMAIL_QUERY_OVERRIDE", os.environ.get("GMAIL_QUERY", 'from:gemini-notes@google.com subject:"Notes:" newer_than:7d'))
 
 SCORE_THRESHOLD = 7.0
+MAX_IDEAS_PER_RUN = int(os.environ.get("MAX_IDEAS_PER_RUN", "10"))
+MIN_SCORE = float(os.environ.get("MIN_SCORE", "5.0"))
 
 LLM_MODEL = os.environ.get("LLM_MODEL", "claude-sonnet-4-6")
 LLM_BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://inference.local")

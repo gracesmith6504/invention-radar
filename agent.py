@@ -35,7 +35,7 @@ def main():
         print(f"Configuration errors: {', '.join(errors)}")
         sys.exit(2)
 
-    print(f"[{datetime.now(timezone.utc).isoformat()}] Invention Radar starting")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] Meeting Miner starting")
 
     try:
         token = get_access_token()
@@ -135,7 +135,7 @@ def main():
         print(f"Sent {sent} Slack notifications")
 
     save_state(state, config.STATE_FILE)
-    print(f"[{datetime.now(timezone.utc).isoformat()}] Invention Radar complete. {len(new_ideas)} new ideas.")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] Meeting Miner complete. {len(new_ideas)} new ideas.")
 
 
 if __name__ == "__main__":

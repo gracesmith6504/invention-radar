@@ -20,7 +20,7 @@ def build_slack_message(idea: dict) -> dict:
         "blocks": [
             {
                 "type": "header",
-                "text": {"type": "plain_text", "text": f"{emoji} Invention Radar: {title}"},
+                "text": {"type": "plain_text", "text": f"{emoji} Meeting Miner: {title}"},
             },
             {
                 "type": "section",

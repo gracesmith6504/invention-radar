@@ -54,6 +54,8 @@ def run_pipeline(transcripts: list[dict], existing_ideas: list[dict]) -> tuple[l
     print(f"  Total raw ideas before scoring: {len(all_raw)}")
     scored = consolidate_and_score(all_raw, existing_ideas)
     print(f"  After scoring/dedup: {len(scored)} ideas")
+    scored = sorted(scored, key=lambda i: i.get("overall_score", 0), reverse=True)[:config.MAX_IDEAS_PER_RUN]
+    print(f"  After top-{config.MAX_IDEAS_PER_RUN} cap: {len(scored)} ideas")
     top_work = [i for i in scored if i.get("category") == "work" and i.get("overall_score", 0) >= 6]
     startup_ideas = startup_lens(top_work)
     print(f"  Startup lens: {len(startup_ideas)} ideas from {len(top_work)} top work ideas")
@@ -142,7 +144,7 @@ def consolidate_and_score(raw_ideas: list[dict], existing_ideas: list[dict]) -> 
             impact = idea.get("team_impact", "none")
             bonus = {"none": 0, "some": 0.5, "high": 1.0}.get(impact, 0)
             idea["overall_score"] = round(min(base + bonus, 10), 1)
-    return ideas
+    return [i for i in ideas if i.get("overall_score", 0) >= config.MIN_SCORE]
 
 
 def startup_lens(top_ideas: list[dict]) -> list[dict]:
@@ -194,7 +196,9 @@ Return JSON:
 def _build_persona_prompt(signals: dict, persona: dict) -> str:
     signals_text = json.dumps(signals, indent=2)
     persona_name = persona.get("name", "unknown")
-    return f"""You are a {persona_name}. Based on these signals extracted from engineering meetings, generate invention ideas.
+    return f"""You are a {persona_name}. Based on these signals extracted from engineering meetings, generate ideas.
+
+Be brief. Every sentence must earn its place. No AI jargon, no filler phrases like 'leveraging', 'ecosystem', 'paradigm', 'infrastructure layer', 'holistic', 'seamless'.
 
 SIGNALS:
 {signals_text}
@@ -207,14 +211,16 @@ Apply these lateral thinking techniques to EACH signal:
 - Emotional Forensics: Ignore what they said. Listen to HOW they said it.
 
 For each idea, provide:
-- title: A sharp, memorable name (not generic)
-- description: 2-3 sentences on what it does and why it matters
+- title: Plain English, 3-6 words. Say what it does, not a metaphor. Bad: "Ownership Tombstone Tracker". Good: "Find Unowned Action Items".
+- description: 2-3 short sentences. No jargon, no filler, no buzzwords.
 - tags: Relevant team areas (agent-ops, security, platform, networking, developer-experience, automation)
-- starting_point: What you could build in a weekend as an MVP. Name specific tools and APIs.
-- ambitious_version: The long-term architectural vision. Think 6th-order effects — what happens as this scales through the entire organization?
-- evidence: Which signal inspired this, from which meeting, attributed to whom
+- starting_point: 1-2 sentences. A concrete weekend build — name the tools, skip the explanation.
+- ambitious_version: 1-2 sentences. Where this goes long-term if it works.
+- evidence: Which signal inspired this, from which meeting, attributed to whom. Quote the key phrase, not the full sentence.
 
 IMPORTANT: If your first instinct is a dashboard or a Slack bot, discard it and think harder.
+
+Generate at most 3 ideas. Quality over quantity — only your strongest.
 
 Return JSON: {{"ideas": [...]}}"""
 
@@ -237,16 +243,22 @@ Look for:
 2. Same theme appearing in unrelated teams (they don't know about each other)
 3. Contradictions: one team's solution is another team's problem
 
-For each cross-meeting connection, provide:
-- title, description, tags, starting_point, ambitious_version
-- evidence: MUST reference at least 2 different meetings with specific quotes
+Be brief. No jargon, no filler. For each cross-meeting connection, provide:
+- title: Plain English, 3-6 words. Say what it does, not a metaphor.
+- description (2-3 sentences, no jargon), tags, starting_point (1-2 sentences), ambitious_version (1-2 sentences)
+- evidence: MUST reference at least 2 different meetings — quote the key phrase, not the full sentence
+
+Generate at most 3 cross-meeting ideas. Quality over quantity.
 
 Return JSON: {{"ideas": [...]}}"""
 
 
 def _build_scoring_prompt(raw_ideas: list[dict], existing_ideas: list[dict], jira_coverage: dict | None = None) -> str:
     ideas_text = json.dumps(raw_ideas, indent=2)
-    existing_titles = [i.get("title", "") for i in existing_ideas[:50]]
+    existing_summaries = [
+        {"title": i.get("title", ""), "description": i.get("description", "")[:100]}
+        for i in existing_ideas[:50]
+    ]
 
     jira_section = ""
     if jira_coverage:
@@ -262,13 +274,13 @@ def _build_scoring_prompt(raw_ideas: list[dict], existing_ideas: list[dict], jir
                 lines.append(f"- \"{title}\": No matching issues found")
         jira_section = "\n\nJIRA COVERAGE (real data — use this for nobody_owns_this scoring):\n" + "\n".join(lines)
 
-    return f"""Score and deduplicate these invention ideas.
+    return f"""Score and deduplicate these ideas.
 
 RAW IDEAS:
 {ideas_text}
 
-ALREADY EXISTING IDEAS (avoid duplicating these):
-{json.dumps(existing_titles)}
+ALREADY EXISTING IDEAS (avoid duplicating or restating these — check both titles AND descriptions for overlap):
+{json.dumps(existing_summaries)}
 {jira_section}
 
 Score each idea on these criteria (1-10):
@@ -283,8 +295,10 @@ Answer "none", "some", or "high". This is a lightweight bonus, not a core criter
 
 Rules:
 - Discard any idea that duplicates an existing idea
-- Discard any idea scoring below 4 overall
+- Discard any idea scoring below 5 overall
 - Merge similar ideas into a stronger combined version
+- Titles must be plain English, 3-6 words — say what it does. No metaphors, no AI jargon, no ominous-sounding names.
+- Keep merged descriptions to 2-3 sentences, starting_point to 1-2 sentences, ambitious_version to 1-2 sentences. Cut jargon and filler ruthlessly.
 - Be harsh — only strong ideas survive
 
 Return JSON with fully formed ideas:
@@ -301,14 +315,14 @@ def _build_startup_prompt(ideas: list[dict]) -> str:
 IDEAS:
 {ideas_text}
 
-For each idea that has business potential, answer:
-- Who is the customer outside Red Hat? Be specific (job title, company size).
-- What do they pay today for a worse version of this? Name actual products/services.
-- What's the minimum viable product you could charge for?
-- Is this problem growing or shrinking? Why?
-- Market signal: any trends, competitors, or regulatory changes?
+For each idea that has business potential, answer in 1 sentence each:
+- customer: Who buys this outside Red Hat? (job title + company size)
+- current_spend: What do they pay today for a worse version?
+- mvp: What's the minimum product you could charge for?
+- market_direction: Is this problem growing or shrinking, and why?
 
-Only include ideas with genuine business potential. Don't force it.
+Keep starting_point to 1-2 sentences and ambitious_version to 1-2 sentences.
+Only include ideas with genuine business potential. Don't force it. No jargon or filler. Titles must be plain English, 3-6 words.
 
 Return JSON:
-{{"ideas": [{{"title": "...", "description": "...", "tags": [...], "starting_point": "Weekend MVP: ...", "ambitious_version": "Full product: ...", "evidence": [...], "scores": {{}}, "startup_analysis": {{"customer": "...", "current_spend": "...", "mvp": "...", "market_direction": "..."}}}}]}}"""
+{{"ideas": [{{"title": "...", "description": "...", "tags": [...], "starting_point": "...", "ambitious_version": "...", "evidence": [...], "scores": {{}}, "startup_analysis": {{"customer": "...", "current_spend": "...", "mvp": "...", "market_direction": "..."}}}}]}}"""

@@ -1,6 +1,6 @@
 # Meeting Miner
 
-An AI agent that reads your meeting transcripts, extracts problems and opportunities, and generates ranked invention ideas — each with a Starting Point (MVP) and an Ambitious Version.
+An AI agent that reads your meeting transcripts, extracts problems and opportunities, and generates ranked ideas — each with a Starting Point (MVP) and an Ambitious Version.
 
 ## How it works
 

@@ -1,10 +1,10 @@
 ---
-description: "Run Meeting Miner — analyze meeting transcripts for invention ideas"
+description: "Run Meeting Miner — analyze meeting transcripts for ideas"
 ---
 
 # Meeting Miner
 
-Analyze recent meeting transcripts from Gmail and generate invention ideas.
+Analyze recent meeting transcripts from Gmail and generate ideas.
 
 ## Usage
 - `/meeting-miner` — process all new meetings since last run
@@ -16,7 +16,7 @@ Analyze recent meeting transcripts from Gmail and generate invention ideas.
 1. Searches Gmail for new Gemini meeting notes (`from:gemini-notes@google.com`)
 2. Reads the Google Doc transcripts (READ ONLY — never edits source docs)
 3. Extracts problems, pain points, and opportunities
-4. Generates invention ideas with Starting Point (MVP) and Ambitious Version
+4. Generates ideas with Starting Point (MVP) and Ambitious Version
 5. Scores ideas on 5 criteria + team impact bonus and ranks them
 6. Appends to the persistent Radar Google Doc
 7. Generates an HTML dashboard at `~/Desktop/meeting-miner-dashboard.html`

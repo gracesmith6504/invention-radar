@@ -38,7 +38,7 @@ def render_dashboard(radar_data: dict, output_path: str) -> None:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invention Radar</title>
+<title>Meeting Miner</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 24px; }}
@@ -91,7 +91,7 @@ h1 {{ font-size: 28px; margin-bottom: 8px; color: #fff; }}
 </style>
 </head>
 <body>
-<h1>Invention Radar</h1>
+<h1>Meeting Miner</h1>
 <p class="subtitle">{len(ideas)} ideas tracked</p>
 
 {signals_html}
@@ -159,11 +159,12 @@ function renderIdeas(ideas) {{
     const impactMap = {{'some': '+0.5', 'high': '+1.0'}};
     const impactBadge = idea.team_impact && impactMap[idea.team_impact]
       ? `<span class="team-impact-badge">${{impactMap[idea.team_impact]}} team</span>` : '';
-    const evidenceHtml = (idea.evidence || []).map(e =>
+    const evidenceItems = (idea.evidence || []).slice(0, 2);
+    const evidenceHtml = evidenceItems.map(e =>
       typeof e === 'string'
         ? `<div class="evidence-item">${{e}}</div>`
         : `<div class="evidence-item">${{e.speaker || '?'}} (${{e.meeting || '?'}}): "${{e.quote || ''}}" <a href="${{e.doc_link || '#'}}" target="_blank">[source]</a></div>`
-    ).join('');
+    ).join('') + ((idea.evidence || []).length > 2 ? `<div class="evidence-item" style="color:#555">(+${{(idea.evidence || []).length - 2}} more)</div>` : '');
     const catClass = idea.category === 'startup' ? 'tag-startup' : 'tag-work';
     const tagsHtml = (idea.tags || []).map(t => `<span class="tag tag-default">${{t}}</span>`).join('');
     const starBadge = idea.starred ? '<span class="star-badge">\\u2B50</span>' : '';
@@ -178,6 +179,12 @@ function renderIdeas(ideas) {{
         <div class="idea-tags"><span class="tag ${{catClass}}">${{idea.category || 'work'}}</span>${{tagsHtml}}</div>
         <div class="section"><div class="section-label">Starting Point</div><div class="section-content">${{idea.starting_point || ''}}</div></div>
         <div class="section"><div class="section-label">Ambitious Version</div><div class="section-content">${{idea.ambitious_version || ''}}</div></div>
+        ${{idea.startup_analysis ? `
+        <div class="section"><div class="section-label">Customer</div><div class="section-content">${{idea.startup_analysis.customer || ''}}</div></div>
+        <div class="section"><div class="section-label">Current Spend</div><div class="section-content">${{idea.startup_analysis.current_spend || ''}}</div></div>
+        <div class="section"><div class="section-label">MVP</div><div class="section-content">${{idea.startup_analysis.mvp || ''}}</div></div>
+        <div class="section"><div class="section-label">Market Direction</div><div class="section-content">${{idea.startup_analysis.market_direction || ''}}</div></div>
+        ` : ''}}
         ${{scoreHtml ? `<div class="scores">${{scoreHtml}}</div>` : ''}}
         ${{evidenceHtml ? `<div class="evidence">${{evidenceHtml}}</div>` : ''}}
       </div>`;
